@@ -1,0 +1,149 @@
+ #region ConexãoAjaxJson
+        //------- Executa uma instrução SQL ----------//
+        // pmType = "SqlCç pommand"    retorna um Command
+        // pmType = "SqlDataReader" retorna um DataReader
+        // pmType = "SqlDataAdapter" retorna um DataAdapter		
+        // pmType = 4 retorna um Dataset
+        // pmType = 5 retorna um Table
+        public static string cmGetStringConnection(string pmDatabase)
+        {
+            try
+            {
+                string strConnection = ConfigurationManager.AppSettings[pmDatabase];
+
+                if (string.IsNullOrEmpty(strConnection))
+                    throw new Exception("A Chave [" + pmDatabase + "] não contém valor no WebConfig. Por Favor Verifique.");
+                else
+                    return strConnection;
+            }
+            catch (Exception exc)
+            {
+                throw new Exception(exc.Message);
+            }
+        }
+
+        public static SqlConnection cmGetConnection(string pmDatabase)
+        {
+            string strConnection = cmGetStringConnection(pmDatabase);
+
+            return new SqlConnection(strConnection);
+
+        }
+        public static object cmExecSql(string pmDatabase, string pmType, string pmSql)
+        {
+            DateTime dtStart = DateTime.Now;
+
+            SqlConnection cnGeneric = cmGetConnection(pmDatabase);
+            cnGeneric.Open();
+
+            try
+            {
+                SqlCommand cmdGeneric = new SqlCommand(pmSql, cnGeneric);
+                cmdGeneric.CommandTimeout = 300;
+
+                object objTemp = null;
+
+                switch (pmType)
+                {
+                    case "SqlCommand": //Command
+                        {
+
+                            objTemp = (object)cmdGeneric;
+                            break;
+                        }
+
+                    case "SqlDataReader": //Reader
+                        {
+                            objTemp = (SqlDataReader)cmdGeneric.ExecuteReader(System.Data.CommandBehavior.CloseConnection);
+                            break;
+                        }
+
+                    case "SqlDataAdapter": //Adapter
+                        {
+                            objTemp = (object)new SqlDataAdapter(cmdGeneric);
+                            break;
+                        }
+
+                    case "DataSet": //Adapter
+                        {
+                            SqlDataAdapter daTemp = new SqlDataAdapter(cmdGeneric);
+                            DataSet dsTemp = new DataSet();
+                            daTemp.Fill(dsTemp);
+                            objTemp = (object)dsTemp;
+                            dsTemp = null;
+                            daTemp = null;
+                            break;
+                        }
+
+                }
+
+                DateTime dtEnd = DateTime.Now;
+                //LogExecInFile(pmDatabase, pmType, pmSql,dtStart.ToString("MM/dd/yyyy hh:mm:ss.fff tt"),dtEnd.ToString("MM/dd/yyyy hh:mm:ss.fff tt"));
+                return objTemp;
+            }
+            catch (Exception exc)
+            {
+                throw new Exception("Erro ao conectar no banco de dados - " + exc.Message);
+            }
+        }
+        public static clsConnectionReturn cmReturnJsonDataTableBySqlProcedure(string ProcedureName, List<Tuple<string, object>> ParamAndValue)
+        {
+            DataTable oDataTableReturn = new DataTable();
+            clsConnectionReturn oConnReturn = new clsConnectionReturn();
+            SqlCommand cmdSql = (SqlCommand)cmExecSql("DB_RI", "SqlCommand", ProcedureName);
+            cmdSql.CommandType = CommandType.StoredProcedure;
+
+            try
+            {
+                if (ParamAndValue != null)
+                {
+                    foreach (var item in ParamAndValue)
+                    {
+                        if (item.Item2 == null)
+                            cmdSql.Parameters.AddWithValue(item.Item1, DBNull.Value);
+                        else
+                            cmdSql.Parameters.AddWithValue(item.Item1, item.Item2);
+                    }
+                }
+
+                SqlDataAdapter adpSql = new SqlDataAdapter(cmdSql);
+                adpSql.Fill(oDataTableReturn);
+                oConnReturn.SUCCESS = true;
+                oConnReturn.MSG_ERROR = "SUCESSO";
+                oConnReturn.RETURN = JsonConvert.SerializeObject(oDataTableReturn);
+            }
+            catch (Exception exc)
+            {
+                oConnReturn.SUCCESS = false;
+                oConnReturn.RETURN = null;
+                oConnReturn.MSG_ERROR = exc.Message;
+                    //(clsUtil.IsCautusUsingErrorMessageSanitization()) ? Resources.CautusTranslate.ErrorMSGSAN : exc.Message;
+                //clsUtil.LogExceptionInFile(exc);
+            }
+            finally
+            {
+                cmdSql.Connection.Close();
+                cmdSql.Dispose();
+            }
+
+            return oConnReturn;
+        }
+
+        public class clsConnectionReturn
+        {
+            public bool SUCCESS { get; set; }
+            public string MSG_ERROR { get; set; }
+            public object RETURN { get; set; }
+            //public bool REDO_LOGIN { get; set; }
+
+            public clsConnectionReturn()
+            {
+                SUCCESS = false;
+                MSG_ERROR = string.Empty;
+                RETURN = null;
+                //REDO_LOGIN = false;
+            }
+
+            public static clsConnectionReturn REDO_LOGIN_DATA()
+            {
+                clsConnectionReturn o

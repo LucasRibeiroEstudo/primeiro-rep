@@ -1,0 +1,82 @@
+//lib datatables
+//criar tabela html e manipular com jquery e js
+//filtro - precisa de um footer ou alguma parte da table para usar como indicativo
+ <script type="text/javascript" scr="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript" scr="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+
+//$('#tblRepresentantes').DataTable({
+            //    initComplete: function () {
+            //        this.api()
+            //            .columns()
+            //            .every(function () {
+            //                var column = this;
+            //                var select = $('<select><option value=""></option></select>')
+            //                    .appendTo($(column.footer()).empty())
+            //                    .on('change', function () {
+            //                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+            //                        column.search(val ? '^' + val + '$' : '', true, false).draw();
+            //                    });
+
+            //                column
+            //                    .data()
+            //                    .unique()
+            //                    .sort()
+            //                    .each(function (d, j) {
+            //                        select.append('<option value="' + d + '">' + d + '</option>');
+            //                    });
+            //        });
+            //    },
+            //});
+
+     var options = new Array();
+            var table =  $('#tblRepresentantes').DataTable({
+                scrollY: '100%;',                
+                paging: false,
+
+                initComplete: function () {
+                    this.api()
+                        .columns()
+                        .every(function () {
+                            var column = this;
+                            var select = $('<select><option value=""></option></select>')
+                                .appendTo($(column.footer()).empty())
+                                .on('change', function () {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                                });
+
+                            column
+                                .data()
+                                .unique()
+                                .sort()
+                                .each(function (d, j) {
+                                    select.append('<option value="' + d + '">' + d + '</option>');
+                                });
+
+                            options.push(select);
+                           
+                            //$("#BodyFiltro").append(select);
+                         
+                        });
+                },
+            });
+
+            var teste = new Array();
+            for (var i = 0; i <= 4; i++) {
+                var t = options[i];
+                $("#BodyFiltro").append('<td id="td'+i+'"></td>');
+                $('#td'+i).append(t);
+               
+            }
+
+            $('a.toggle-vis').on('click', function (e) {
+                e.preventDefault();
+
+                // Get the column API object
+                var column = table.column($(this).attr('data-column'));
+
+                // Toggle the visibility
+                column.visible(!column.visible());
+            });
+

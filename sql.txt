@@ -1,0 +1,90 @@
+select DISTINCT OBJECT_NAME(id) from sys.syscomments 
+where  (text) like '%ESTOQUE DE SEGURANÇA - RETALHO%'
+-------------------------------------------------------------------------------------
+
+tbl_cobranca = SE1010
+tbl_nota_fiscal_saida = SF2010
+
+SELECT * FROM SX3010 WITH(READUNCOMMITTED)
+  WHERE X3_CAMPO = 'XX_XXXX'
+-------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
+ENVIAR EMAIL POR PEDIDO
+-GRUPO DE CLIENTE
+-TEMPO DE ENVIO
+-----------------------------------------------------------------------------------------
+IF OBJECT_ID('tempdb..#tmp_gg_notas') IS NOT NULL DROP TABLE tempdb..#tmp_gg_notas
+-----------------------------------------------------------------------------------------
+saber quando foi a ultima vez que a proc executou
+-----------------------------------------------------------------------------------------
+SELECT
+OBJECT_NAME(m.object_id) AS NomeDoObjeto,
+ MAX(qs.last_execution_time) AS UltimaExecucao
+FROM sys.sql_modules m
+LEFT JOIN (sys.dm_exec_query_stats qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st)
+ ON m.object_id = st.objectid
+ AND st.dbid = DB_ID()
+WHERE OBJECT_NAME(m.object_id) like  '%prc%email%'
+GROUP BY OBJECT_NAME(m.object_id);
+-----------------------------------------------------------------------------------------
+SELECT Z08.Z08_ETD AS DATA_PO FROM Z08010 Z08 WITH(NOLOCK)        
+WHERE Z08.Z08_NUM = '850650'
+
+SELECT PREVISAO_EMBARQUE AS DATA_PROCESSO FROM vw_controle_importacao VW WITH(NOLOCK)        
+WHERE VW.PEDIDO = '850650'
+-----------------------------------------------------------------------------------------
+encaminhar pedido para algum gerente
+
+DECLARE @int_retorno INT 
+EXECUTE dbo.prc_i_bkf_encaminhar_intencao	@TIPO = 'PED', -- varchar(3)
+											@NF = '', -- varchar(9)
+											@SERIE = '', -- varchar(3)
+											@PARCEL = '', -- varchar(1)
+											@NUMERO = 'PO3881', -- varchar(9)
+											@DE = '37   ', -- varchar(6)
+											@PARA = '68    ', -- varchar(6)
+											@CODMOT = '000001', -- varchar(6)
+											@OBS = 'REDIRECIONAMENTO AUTOMÁTICO', -- varchar(255)
+											@USR = 'ROSANGELA BUENO', -- varchar(6)
+											@USUARIOLOGADO = NULL, -- varchar(30)
+											@retorno = @int_retorno -- int
+
+
+-----------------------------------------------------------------------------------------
+sp_WhoIsActive
+
+execute step_close_session_user 'webreports|importacao_ari'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

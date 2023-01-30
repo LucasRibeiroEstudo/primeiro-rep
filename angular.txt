@@ -1,0 +1,24 @@
+
+instalar angular
+-instalar nodejs
+-instalar vscode
+-instalar powershell/hyper
+-abrir powershell/hyper e digital npm install -g @angular/cli
+
+----------------------------
+npm = tras um pré projeto pronto
+
+testlink = debug
+
+---------------------------------------
+install yarn
+install uikit
+incluir pasta assets
+Editar variaveis - src/less/theme/variables
+criar pasta custom/icons e adionar icones svg
+dar um yarn install
+pegar as pastas dist/js e cs
+criar projeto angular
+colar no src/assets as pastas js e cs
+ng serve -o //rodar aplicação
+ng generate component Navbar //criar navbar

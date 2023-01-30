@@ -1,0 +1,271 @@
+          type: "POST",
+                url: "Configuracoes.aspx/CarregarFornecedor",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (dataSuccess) {
+
+                    var oDataReport = JSON.parse(dataSuccess.d.RETURN)
+                    var tRow = "";
+                   
+                    var classe = 'item';
+
+                    if (oDataReport.length > 0) {
+                        oDataReport.forEach((elemento) => {
+                            tRow += '<tr class='+classe+' id="'+ elemento.id_parametro +'">';
+                            tRow += '<td class="data">' + elemento.descricao + '</td>';
+                            tRow += '<td class="data">' + elemento.atributo_1 + '</td>';
+                            tRow += '<td class="data">' + elemento.atributo_2 + '</td>';
+                            tRow += '<td style="width:40px;"><button type="button" class="save"><img src="../Img/s.png" alt="[S]" title="Salvar" class="vb" border="0" height="15" /></button><button type="button" class="edit"><img src="../Img/e.png" alt="[E]" title="Editar" class="vb" border="0" height="15" /></button> <button type="button" class="delete"><img src="../Img/x.png" alt="[X]" title="Remover" class="vb" border="0" height="15" /></button></td>';
+                            tRow += '<td style="width:40px;"><button type="button" id="' + elemento.codigo +'" border="0" onclick="EnviarEmailFornecedor(this.id)" style="border:none;"><img src="../Img/ico_mensagem.png" alt="[M]" class="vb" title="Enviar Email" border="0" " height="15" /></button></td> ';
+                            tRow += '<td style="width:40px;"><input type="checkbox" class="enviaremail" id="' + elemento.codigo +'" /></td>';
+                            tRow += "</tr>";
+                            if (classe == 'item')
+                                classe = 'alternate_item'
+                            else
+                                classe = 'item'
+                        });
+                    }                   
+                    $('#bodyFornecedores').append(tRow);
+
+
+                },
+                error: function (dataError) {
+                   alert("Erro ao carregar Fornecedores. Contate o Administrador!");
+                }
+            });
+        }
+
+        async function EnviarEmailFornecedor(fornecedor) {
+            if (fornecedor != null && fornecedor != "") {
+                var payload = {};
+                payload.codigofornecedor = fornecedor;
+
+                $.ajax({
+                    type: "POST",
+                    url: "Configuracoes.aspx/EnviarEmailFornecedor",
+                    data: JSON.stringify(payload),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (dataSuccess) {
+
+                        var oDataReport = dataSuccess.d.RETURN;
+
+                        if (oDataReport == true) {
+                            alert("Email enviado com sucesso!");
+                        } else {
+                            alert("Erro ao enviar o email, contate o administrador!\nLembre - se de escolher o cliente!");
+                        }
+                    },
+                    error: function (dataError) {
+                        alert("Erro ao enviar o email, contate o administrador!\nLembre - se de escolher o cliente!");
+                    }
+                });
+            }
+        }
+
+        async function EnviarEmailFornecedores() {
+            const fornecedores = PegarFornecedoresSelecionados();
+            if (fornecedores != '' && fornecedores != null) {
+                var payload = {};
+                payload.fornecedores = fornecedores;
+
+                $.ajax({
+                    type: "POST",
+                    url: "Configuracoes.aspx/EnviarEmailFornecedores",
+                    data: JSON.stringify(payload),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (dataSuccess) {
+
+                        var oDataReport = dataSuccess.d.RETURN;
+
+                        if (oDataReport == true) {
+                            alert("Email enviado com sucesso!");
+                        } else {
+                            alert("Erro ao enviar o email, contate o administrador!\nLembre-se de escolher o cliente!");
+                        }
+                    },
+                    error: function (dataError) {
+                        alert("Erro ao enviar o email, contate o administrador!\nLembre - se de escolher o cliente!");
+                    }
+                });
+            }
+            return;
+        }
+
+
+        function PegarFornecedoresSelecionados() {
+            var fornecedores = ""
+            $('input[class="enviaremail"').each(function (index,elemento) {
+                if (elemento.checked == true)
+                    fornecedores += elemento.id + ",";      
+            });
+
+            return fornecedores;
+        }
+
+        async function IncluirFornecedor() {
+
+            var erro = ValidarFornecedor();
+            if (erro != '') {
+                alert(erro);
+                return;
+            }
+
+            var payload = {};
+            payload.Fornecedor = $("#txtFornecedorNome").val();
+            payload.Email = $("#txtFornecedorEmail").val();
+
+            $.ajax({
+                type: "POST",
+                url: "Configuracoes.aspx/IncluirFornecedores",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(payload),
+                success: function (dataSuccess) {
+
+                    var oDataReport = JSON.parse(dataSuccess.d.RETURN);
+                    if (oDataReport != null) {
+                        AdicionarLinha($("#txtFornecedorNome").val(), $("#txtFornecedorEmail").val(), oDataReport);
+                        LimparCamposFornecedor();
+                       
+                    } else {
+                        alert("Erro ao inserir Fornecedor. Contate o administrador!");
+                    }
+                },
+                error: function (dataError) {
+                   
+                    alert("Erro ao inserir Fornecedor. Contate o administrador!");
+                }
+            });
+        }
+
+        function ValidarFornecedor() {
+            var erro = ""
+            var re = /\S+@\S+\.\S+/;
+           
+            if ($("#txtFornecedorNome").val() == '')
+                erro += "Escreva o nome de um Fornecedor!\n";
+            if ($("#txtFornecedorEmail").val() == '')
+                erro += "Escreva o email do Fornecedor!\n";
+            else if (!(re.test($("#txtFornecedorEmail").val())))
+                erro += "Escreva um email Válido!\n";
+            return erro;
+        }
+
+        async function AtualizarFornecedor(Fornecedor) {
+            var payload = {};
+            payload.idParametro = Fornecedor[0];
+            payload.NomeFornecedor = Fornecedor[1];
+            payload.EmailFornecedor = Fornecedor[2];
+            payload.EmailFornecedor2 = Fornecedor[3];
+
+            $.ajax({
+                type: "POST",
+                url: "Configuracoes.aspx/AtualizarFornecedor",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(payload),
+                success: function (dataSuccess) {
+                    var oDataReport = dataSuccess.d.RETURN;
+                    if (oDataReport != null) {
+
+                    } else {
+                        alert("Erro ao Remover Fornecedor. Contate o Adminitrador!");
+                    }
+                },
+                error: function (dataError) {
+                   alert("Erro ao Remover Fornecedor. Contate o Adminitrador!");
+                }
+            });
+        }
+      
+        async function RemoverFornecedor(idParametro) {
+            var payload = {};
+            payload.idParametro = idParametro;
+            $.ajax({
+                type: "POST",
+                url: "Configuracoes.aspx/RemoverFornecedores",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(payload),
+                success: function (dataSuccess) {
+                    var oDataReport = dataSuccess.d.RETURN;
+                    if (oDataReport != null) {
+
+                    } else {
+                        alert("Erro ao Remover Fornecedor. Contate o Adminitrador!");
+                    }
+                },
+                error: function (dataError) {
+                    var oDataReport = JSON.parse(dataError.d.MSG_ERROR);
+                    alert("Erro ao Remover Fornecedor. Contate o Adminitrador!");
+                }
+            });
+        }
+
+        function LimparCamposFornecedor() {
+            document.getElementById("txtFornecedorEmail").value = '';
+            document.getElementById("txtFornecedorNome").value = '';
+        }
+        function AdicionarLinha(nomeFornecedor,emailFornecedor,Fornecedor) {
+            var tRow = '';
+            tRow += '<tr style="background-color:lightgreen;" id="' + Fornecedor[0].idParametro+'">';
+            tRow += '<td class="data">' + nomeFornecedor + '</td>';
+            tRow += '<td class="data">' + emailFornecedor + '</td>';
+            tRow += '<td class="data"> </td>';
+            tRow += '<td style="width:40px;"><button type="button" class="save"><img src="../Img/s.png" alt="[S]" title="Salvar" class="vb" border="0" height="15" /></button><button type="button" class="edit"><img src="../Img/e.png" alt="[E]" title="Editar" class="vb" border="0" height="15" /></button> <button type="button" class="delete"><img src="../Img/x.png" alt="[X]" title="Remover" class="vb" border="0" height="15" /></button></td>';
+            tRow += '<td style="width:40px;"><button type="button" id="' + Fornecedor[0].codigo + '" border="0" onclick="EnviarEmailFornecedor(this.id)" style="border:none;"><img src="../Img/ico_mensagem.png" alt="[M]" class="vb" title="Enviar Email" border="0" " height="15" /></button></td> ';
+            tRow += '<td style="width:40px;"><input type="checkbox" class="enviaremail" id="' + Fornecedor[0].codigo + '" /></td>';
+            tRow += "</tr>";
+            $('#bodyFornecedores').append(tRow);
+
+        }
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ #region EnviarEmailFornecedores
+
+        [WebMethod(CacheDuration = 60)]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static clsConnectionReturn EnviarEmailFornecedor(string codigofornecedor) => Negocio.Cliente.EnviarEmailFornecedor(codigofornecedor, Negocio.Cliente.ClienteAtivo.Codigo, Autenticacao.UsuarioAtivo.Id);
+
+        [WebMethod(CacheDuration = 60)]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static clsConnectionReturn EnviarEmailFornecedores(string fornecedores) => Negocio.Manutencao.Configuracao.EnviarEmailFornecedores(fornecedores,Negocio.Cliente.ClienteAtivo.Codigo, Autenticacao.UsuarioAtivo.Id);
+
+        #endregion
+
+ public static clsConnectionReturn EnviarEmailFornecedor(string codigo_fornecedor,string codigo_cliente,int id_web_usuario)
+        {
+            clsConnectionReturn oConnReturn = new clsConnectionReturn();
+
+            Database database = DatabaseFactory.CreateDatabase(Constante.CONEXAO_BI);
+            DbCommand command = database.GetStoredProcCommand("prc_s_cadastro_cliente_fornecedor_enviar_email_unitario");
+            database.AddInParameter(command, "@codigo_fornecedor", DbType.String, codigo_fornecedor);
+            database.AddInParameter(command, "@codigo_cliente", DbType.String, codigo_cliente);
+            database.AddInParameter(command, "@id_web_usuario", DbType.Int32, id_web_usuario); 
+           
+            try
+            {
+                database.ExecuteDataSet(command);
+                oConnReturn.SUCCESS = true;
+                oConnReturn.MSG_ERROR = new Feedback(Status.Ok, "SUCESSO");
+                oConnReturn.RETURN = true;
+            }
+            catch (Exception exc)
+            {
+                oConnReturn.SUCCESS = false;
+                oConnReturn.RETURN = null;
+                oConnReturn.MSG_ERROR = new Feedback(Status.Error, exc.Message);
+            }
+            finally
+            {
+                Objeto<DbCommand>.Dispose(command);
+                database = null;
+            }
+
+            return oConnReturn;
+
+        }
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
