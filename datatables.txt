@@ -79,4 +79,5 @@
                 // Toggle the visibility
                 column.visible(!column.visible());
             });
+            ----------------------------------------------------------------------
 
